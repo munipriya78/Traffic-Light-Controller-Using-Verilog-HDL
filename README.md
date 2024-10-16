@@ -1,12 +1,12 @@
 # Traffic-Light-Controller-Using-Verilog-HDL
-Aim
+## Aim
 To design and simulate a traffic light controller using Verilog HDL, and verify its functionality through a testbench in the Vivado 2023.1 simulation environment. The objective is to control the traffic lights for a junction with a specific time-based sequence for Red, Yellow, and Green lights.
 
-Apparatus Required
+## Apparatus Required
 Vivado 2023.1 or equivalent Verilog simulation tool.
 Computer system with a suitable operating system.
 FPGA board (optional for hardware verification).
-Procedure
+## Procedure
 Launch Vivado 2023.1:
 
 Open Vivado and create a new project.
@@ -31,103 +31,17 @@ Capture screenshots of the waveform and save the simulation logs to include in y
 
 Verilog Code for Traffic Light Controller
 
-// traffic_light_controller.v
-module traffic_light_controller (
-    input wire clk,
-    input wire reset,
-    output reg [2:0] lights  // 3-bit output: [2]=Red, [1]=Yellow, [0]=Green
-);
-    // Define states
-    typedef enum reg [1:0] {
-        GREEN = 2'b00,
-        YELLOW = 2'b01,
-        RED = 2'b10
-    } state_t;
+module cyclic_lamp(clk,rst,light); input clk,rst; output reg [2:0] light; parameter [1:0]S0=2'b00,S1=2'b01,S2=2'b10; parameter RED=3'b100, GREEN=3'b010, YELLOW=3'b001; reg [1:0] state; always @(posedge clk)
 
-    state_t current_state, next_state;
-    reg [3:0] counter;  // Timer counter
+case (state) S0: begin // S0 means RED light <= GREEN; state <= S1; end S1: begin // S1 means GREEN light <= YELLOW; state <= S2; end S2: begin // S2 means YELLOW light <= RED; state <= S0; end default: begin light <= RED; state <= S0; end
 
-    // State transition based on counter
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            current_state <= GREEN;
-            counter <= 0;
-        end else begin
-            if (counter == 4'd9) begin
-                current_state <= next_state;
-                counter <= 0;
-            end else begin
-                counter <= counter + 1;
-            end
-        end
-    end
+endcase
+      endmodule
 
-    // Next state logic and output control
-    always @(*) begin
-        case (current_state)
-            GREEN: begin
-                lights = 3'b001;  // Green light on
-                next_state = YELLOW;
-            end
-            YELLOW: begin
-                lights = 3'b010;  // Yellow light on
-                next_state = RED;
-            end
-            RED: begin
-                lights = 3'b100;  // Red light on
-                next_state = GREEN;
-            end
-            default: begin
-                lights = 3'b000;  // All lights off
-                next_state = GREEN;
-            end
-        endcase
-    end
-endmodule
+ ## Output
+![image](https://github.com/user-attachments/assets/64fdd19b-64fc-43c5-8e55-196c178fb411)
 
-Testbench for Traffic Light Controller
-
-// traffic_light_controller_tb.v
-`timescale 1ns / 1ps
-
-module traffic_light_controller_tb;
-
-    // Inputs
-    reg clk;
-    reg reset;
-
-    // Outputs
-    wire [2:0] lights;
-
-    // Instantiate the Unit Under Test (UUT)
-    traffic_light_controller uut (
-        .clk(clk),
-        .reset(reset),
-        .lights(lights)
-    );
-
-    // Clock generation
-    always #5 clk = ~clk;  // Toggle clock every 5 ns
-
-    // Test procedure
-    initial begin
-        // Initialize inputs
-        clk = 0;
-        reset = 1;
-
-        // Release reset after some time
-        #10 reset = 0;
-
-        // Run simulation for 100 ns to observe light transitions
-        #100 $stop;
-    end
-
-    // Monitor outputs
-    initial begin
-        $monitor("Time=%0t | Lights (R Y G) = %b", $time, lights);
-    end
-
-endmodule
+ 
 
 
 Conclusion
